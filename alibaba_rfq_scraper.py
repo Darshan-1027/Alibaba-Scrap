@@ -1,4 +1,3 @@
-
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -13,27 +12,63 @@ HEADERS = {
 
 scraped_data = []
 
+# Alibaba site uses JS, so normally selenium is needed. Here we assume a simplified static simulation
+for page in range(1, 3):  # Test with first 2 pages. You can expand to all
+    params = {
+        "country": "AE",
+        "recently": "Y",
+        "page": page
+    }
+    res = requests.get(BASE_URL, headers=HEADERS, params=params)
+    soup = BeautifulSoup(res.text, "html.parser")
 
-simulated_data = [{
-    "RFQ ID": "1680683396",
-    "Title": "2025 LABUBU Version 3 Soft Stuffed Plush Toys Cute Keychain Hot Wholesale Mystery Boxes for Kids",
-    "Buyer Name": "vishnu Das",
-    "Buyer Image": "",
-    "Inquiry Time": "1 hours before",
-    "Quotes Left": "4",
-    "Country": "United Arab Emirates",
-    "Quantity Required": "4000 Pieces/Pairs",
-    "Email Confirmed": "Yes",
-    "Experienced Buyer": "No",
-    "Complete Order via RFQ": "No",
-    "Typical Replies": "Yes",
-    "Interactive User": "No",
-    "Inquiry URL": "https://sourcing.alibaba.com/rfq_detail.htm?spm=a2700.rfqsearch.search.1.2e3b72faGJjU0L&rfqId=1680683396",
-    "Inquiry Date": "14-07-2025",
-    "Scraping Date": "14-07-2025",
-}]
+    listings = soup.find_all("div", class_=re.compile("card-rfq-item"))
+    for item in listings:
+        title = item.find("a", class_="title")
+        title_text = title.text.strip() if title else ""
+        inquiry_url = "https:" + title["href"] if title else ""
+        
+        details = item.text.strip()
 
-output_df = pd.DataFrame(simulated_data)
-output_path = "alibaba_rfq_scraped_output.csv"
-output_df.to_csv(output_path, index=False)
-print("CSV file saved as", output_path)
+        # Extract individual details using regex or search techniques
+        buyer_name = item.find("div", class_="user-name")
+        buyer = buyer_name.text.strip() if buyer_name else ""
+
+        country_img = item.find("img", class_="country-flag")
+        country = country_img["alt"] if country_img else ""
+
+        quantity_match = re.search(r"Quantity Required:\s+(\d+.*?)\s", details)
+        quantity = quantity_match.group(1) if quantity_match else ""
+
+        quotes_match = re.search(r"Quotes Left\s+(\d+)", details)
+        quotes = quotes_match.group(1) if quotes_match else ""
+
+        time_match = re.search(r"Date Posted:\s+(.+?)\s", details)
+        inquiry_time = time_match.group(1) if time_match else ""
+
+        today = datetime.today().strftime("%d-%m-%Y")
+
+        scraped_data.append({
+            "RFQ ID": "",  # Not available in list, needs detail page
+            "Title": title_text,
+            "Buyer Name": buyer,
+            "Buyer Image": "",
+            "Inquiry Time": inquiry_time,
+            "Quotes Left": quotes,
+            "Country": country,
+            "Quantity Required": quantity,
+            "Email Confirmed": "",
+            "Experienced Buyer": "",
+            "Complete Order via RFQ": "",
+            "Typical Replies": "",
+            "Interactive User": "",
+            "Inquiry URL": inquiry_url,
+            "Inquiry Date": today,
+            "Scraping Date": today,
+        })
+
+    time.sleep(2)
+
+
+output_df = pd.DataFrame(scraped_data)
+output_df.to_csv("Scrap.csv",index=Fasle)
