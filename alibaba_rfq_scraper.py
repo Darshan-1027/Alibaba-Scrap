@@ -13,8 +13,7 @@ HEADERS = {
 
 scraped_data = []
 
-# Alibaba site uses JS, so normally selenium is needed. Here we assume a simplified static simulation
-# Replace this with real scraping if using Selenium in a full environment
+
 simulated_data = [{
     "RFQ ID": "1680683396",
     "Title": "2025 LABUBU Version 3 Soft Stuffed Plush Toys Cute Keychain Hot Wholesale Mystery Boxes for Kids",
@@ -34,7 +33,6 @@ simulated_data = [{
     "Scraping Date": "14-07-2025",
 }]
 
-# Save to CSV
 output_df = pd.DataFrame(simulated_data)
 output_path = "alibaba_rfq_scraped_output.csv"
 output_df.to_csv(output_path, index=False)
